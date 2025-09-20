@@ -11,12 +11,12 @@ from PIL import Image, ImageDraw, ImageFont, ExifTags, ImageColor
 def parse_args() -> argparse.Namespace:
 	parser = argparse.ArgumentParser(description="Add EXIF shooting date watermark to images.")
 	parser.add_argument("input_path", help="Image file or directory path")
-	parser.add_argument("--font-size", type=int, default=32, dest="font_size", help="Font size in pixels (default: 32)")
+	parser.add_argument("--font-size", type=int, default=80, dest="font_size", help="Font size in pixels (default: 80)")
 	parser.add_argument("--color", type=str, default="#FFFFFF", help="Text color (hex or name), default #FFFFFF")
 	parser.add_argument("--position", type=str, default="bottom-right", choices=[
 		"top-left", "top-right", "center", "bottom-left", "bottom-right"
 	], help="Watermark position (default: bottom-right)")
-	parser.add_argument("--opacity", type=int, default=220, help="Text opacity 0-255 (default: 220)")
+	parser.add_argument("--opacity", type=int, default=255, help="Text opacity 0-255 (default: 255)")
 	parser.add_argument("--font-path", type=str, default=None, help="Optional path to a .ttf font file")
 	return parser.parse_args()
 
@@ -26,7 +26,7 @@ def find_output_dir(input_path: Path) -> Path:
 		base_dir = input_path.parent
 	else:
 		base_dir = input_path
-	return base_dir / f"{base_dir.name}_watermark"
+	return base_dir / "output"
 
 
 def format_date(date: datetime) -> str:
@@ -87,7 +87,31 @@ def load_font(font_path: Optional[str], font_size: int) -> ImageFont.ImageFont:
 			return ImageFont.truetype(font_path, font_size)
 		except Exception:
 			pass
-	return ImageFont.load_default()
+	
+	# Try to load a system font that supports size
+	try:
+		# Try common system fonts on Windows
+		fonts_to_try = [
+			"C:/Windows/Fonts/arial.ttf",
+			"C:/Windows/Fonts/calibri.ttf", 
+			"C:/Windows/Fonts/msyh.ttc",  # Microsoft YaHei
+			"C:/Windows/Fonts/simhei.ttf",  # SimHei
+		]
+		for font_file in fonts_to_try:
+			if os.path.exists(font_file):
+				return ImageFont.truetype(font_file, font_size)
+	except Exception:
+		pass
+	
+	# Fallback: create a font with size scaling
+	try:
+		# Use default font but scale it
+		default_font = ImageFont.load_default()
+		# Create a new font with the requested size
+		return ImageFont.truetype("arial.ttf", font_size)
+	except Exception:
+		# Last resort: return default font (will be small)
+		return ImageFont.load_default()
 
 
 def draw_watermark(image: Image.Image, text: str, color: str, opacity: int, position: str, font: ImageFont.ImageFont) -> Image.Image:
