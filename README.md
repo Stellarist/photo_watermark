@@ -34,6 +34,14 @@ By default, the tool extracts `DateTimeOriginal` (or similar EXIF date) and form
 
 Outputs go to `output` folder inside the input directory.
 
+## Release
+
+**v1.0** - Initial release
+- EXIF-based date watermarking with customizable font size, color, and position
+- Support for single files and directory processing
+- Windows system font support for proper font sizing
+- Output to `output/` directory with preserved structure
+
 ## Notes
 - Fonts: Uses PIL's default font if no TTF provided. You may add `--font-path` to specify a TTF file.
 - Supported images: common formats supported by Pillow (JPEG, PNG, etc.).
